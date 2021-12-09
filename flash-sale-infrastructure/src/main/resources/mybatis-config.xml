@@ -13,5 +13,7 @@
     </typeAliases>
     <mappers>
         <mapper resource="mybatis/FlashActivityMapper.xml"/>
+        <mapper resource="mybatis/FlashItemMapper.xml"/>
+        <mapper resource="mybatis/FlashOrderMapper.xml"/>
     </mappers>
 </configuration>

@@ -1,11 +1,15 @@
 package com.jsrdxzw.flashsale.app.service.item.cache.model;
 
 import com.jsrdxzw.flashsale.domain.model.entity.FlashItem;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Accessors;
+import lombok.NoArgsConstructor;
 
 @Data
-@Accessors(chain = true)
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class FlashItemCache {
     protected boolean exist;
     private FlashItem flashItem;

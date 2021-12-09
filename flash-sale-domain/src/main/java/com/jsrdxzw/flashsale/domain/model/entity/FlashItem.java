@@ -2,8 +2,10 @@ package com.jsrdxzw.flashsale.domain.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jsrdxzw.flashsale.domain.model.enums.FlashItemStatus;
-import com.jsrdxzw.flashsale.domain.util.JSONUtil;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
@@ -14,6 +16,9 @@ import java.util.Date;
  * @date 2021/12/3 5:31 PM
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class FlashItem implements Serializable {
     /**
      * 秒杀品ID
@@ -68,11 +73,6 @@ public class FlashItem implements Serializable {
      * 库存是否已经预热
      */
     private Integer stockWarmUp;
-
-    @Override
-    public String toString() {
-        return JSONUtil.toJSONString(this);
-    }
 
     public boolean validateParamsForCreate() {
         return StringUtils.hasText(itemTitle)

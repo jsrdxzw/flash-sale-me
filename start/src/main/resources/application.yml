@@ -20,12 +20,16 @@ management:
 mybatis:
   config-location: classpath:mybatis-config.xml
   mapper-locations: classpath:mappers/*xml
+
 place_order_type: normal
+
 server:
   port: 8090
   tomcat:
     threads:
       max: 500
+  servlet:
+    context-path: /api
 spring:
   main:
     allow-circular-references: true
@@ -55,4 +59,3 @@ spring:
       # 默认情况下 Sentinel 会在客户端首次调用的时候进行初始化，开始向控制台发送心跳包
       # 配置 sentinel.eager=true 时，取消Sentinel控制台懒加载功能
       eager: true
-

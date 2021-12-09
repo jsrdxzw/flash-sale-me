@@ -6,9 +6,9 @@ import com.jsrdxzw.flashsale.domain.repository.FlashItemRepository;
 import com.jsrdxzw.flashsale.persistence.coverter.FlashItemMapping;
 import com.jsrdxzw.flashsale.persistence.mapper.FlashItemMapper;
 import com.jsrdxzw.flashsale.persistence.model.FlashItemDO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
  */
 @Repository
 public class FlashItemRepositoryImpl implements FlashItemRepository {
-    @Resource
+
+    @Autowired
     private FlashItemMapper flashItemMapper;
 
     @Override

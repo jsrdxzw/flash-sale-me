@@ -9,7 +9,7 @@ public class FlashActivityDTO {
     /**
      * 活动ID
      */
-    private Long Id;
+    private Long id;
     /**
      * 活动名称
      */

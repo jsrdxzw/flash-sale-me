@@ -43,7 +43,7 @@ public class FlashActivityController {
         return FlashActivityControllerMapping.INSTANCE.with(appResult);
     }
 
-    @GetMapping(value = "/flash-activities/online")
+    @GetMapping(value = "/online")
     @SentinelResource("GetOnlineActivitiesResource")
     public MultiResponse<FlashActivityResponse> getOnlineFlashActivities(@RequestAttribute Long userId,
                                                                          @RequestParam Integer pageSize,
