@@ -1,0 +1,194 @@
+version: "3"
+networks:
+  thoughts-beta-network:
+    driver: bridge
+volumes:
+  prometheus_data: {}
+services:
+  mysql:
+    image: mysql
+    container_name: mysql
+    volumes:
+      - ./data/db_data:/var/lib/mysql
+      - ./config/mysql/init:/docker-entrypoint-initdb.d/
+    command: ['--default-time-zone=+8:00']
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flash_sale
+      MYSQL_USER: thoughts-beta
+      MYSQL_PASSWORD: thoughts-beta
+    ports:
+      - "3306:3306"
+    networks:
+      - thoughts-beta-network
+  mysqld-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysqld-exporter
+    ports:
+      - "9104:9104"
+    environment:
+      - DATA_SOURCE_NAME=root:root@tcp(mysql:3306)/
+    depends_on:
+      - mysql
+    networks:
+      - thoughts-beta-network
+  redis:
+    container_name: redis
+    image: redislabs/redismod:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - thoughts-beta-network
+  redis-commander:
+    container_name: redis-commander
+    image: rediscommander/redis-commander:latest
+    hostname: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    networks:
+      - thoughts-beta-network
+  redis-exporter:
+    container_name: redis-exporter
+    image: oliver006/redis_exporter
+    command: -redis.addr redis://redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - thoughts-beta-network
+  sentinel:
+    image: bladex/sentinel-dashboard
+    container_name: sentinel
+    ports:
+      - "8858:8858"
+    networks:
+      - thoughts-beta-network
+  nacos:
+    image: nacos/nacos-server:2.0.3
+    container_name: nacos-standalone-mysql
+    env_file:
+      - ./config/nacos/nacos-standlone-mysql.env
+    volumes:
+      - ./data/standalone-logs/:/home/nacos/logs
+      - ./config/nacos/custom.properties:/home/nacos/init.d/custom.properties
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9555:9555"
+    depends_on:
+      - mysql
+    restart: on-failure
+    networks:
+      - thoughts-beta-network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    ports:
+      - "9100:9100"
+    networks:
+      - thoughts-beta-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "9090:9090"
+    networks:
+      - thoughts-beta-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana
+    environment:
+      - GF_INSTALL_PLUGINS=redis-app
+      - GF_INSTALL_PLUGINS=redis-datasource
+      - GF_INSTALL_PLUGINS=redis-explorer-app
+    volumes:
+      - ./grafana-storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    external_links:
+      - redis:redis
+    networks:
+      - thoughts-beta-network
+
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    container_name: elasticsearch
+    volumes:
+      - type: bind
+        source: ./config/elk/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms256m"
+      discovery.type: single-node
+    networks:
+      - thoughts-beta-network
+
+  logstash:
+    image: logstash:7.14.2
+    container_name: logstash
+    volumes:
+      - type: bind
+        source: ./config/elk/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./config/elk/pipeline
+        target: /usr/share/logstash/pipeline
+        read_only: true
+    ports:
+      - "5044:5044"
+      - "5001:5000/tcp"
+      - "5001:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - thoughts-beta-network
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:7.14.2
+    container_name: kibana
+    volumes:
+      - type: bind
+        source: ./config/elk/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+    ports:
+      - "5601:5601"
+    networks:
+      - thoughts-beta-network
+    depends_on:
+      - elasticsearch
