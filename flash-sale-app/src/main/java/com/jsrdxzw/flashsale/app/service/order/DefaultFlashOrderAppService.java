@@ -3,20 +3,31 @@ package com.jsrdxzw.flashsale.app.service.order;
 import com.alibaba.fastjson.JSON;
 import com.jsrdxzw.flashsale.app.exception.BizException;
 import com.jsrdxzw.flashsale.app.model.command.FlashPlaceOrderCommand;
+import com.jsrdxzw.flashsale.app.model.converter.FlashOrderAppMapping;
 import com.jsrdxzw.flashsale.app.model.dto.FlashOrderDTO;
 import com.jsrdxzw.flashsale.app.model.query.FlashOrdersQuery;
 import com.jsrdxzw.flashsale.app.model.result.*;
 import com.jsrdxzw.flashsale.app.security.SecurityService;
 import com.jsrdxzw.flashsale.app.service.placeorder.PlaceOrderService;
+import com.jsrdxzw.flashsale.app.service.placeorder.queued.QueuedPlaceOrderService;
+import com.jsrdxzw.flashsale.app.service.stock.ItemStockCacheService;
+import com.jsrdxzw.flashsale.domain.model.PageResult;
+import com.jsrdxzw.flashsale.domain.model.StockDeduction;
+import com.jsrdxzw.flashsale.domain.model.entity.FlashOrder;
 import com.jsrdxzw.flashsale.domain.service.FlashOrderDomainService;
+import com.jsrdxzw.flashsale.domain.service.StockDeductionDomainService;
 import com.jsrdxzw.flashsale.domain.util.JSONUtil;
 import com.jsrdxzw.flashsale.lock.DistributedLock;
 import com.jsrdxzw.flashsale.lock.DistributedLockFactoryService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.jsrdxzw.flashsale.app.exception.AppErrorCode.*;
 import static com.jsrdxzw.flashsale.util.StringHelper.link;
@@ -41,6 +52,12 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private StockDeductionDomainService stockDeductionDomainService;
+
+    @Autowired
+    private ItemStockCacheService itemStockCacheService;
 
     @Override
     public AppSimpleResult<PlaceOrderResult> placeOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
@@ -77,17 +94,64 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
 
     @Override
     public AppSimpleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(Long userId, Long itemId, String placeOrderTaskId) {
-        return null;
+        if (userId == null || itemId == null || StringUtils.isEmpty(placeOrderTaskId)) {
+            throw new BizException(INVALID_PARAMS);
+        }
+        if (placeOrderService instanceof QueuedPlaceOrderService) {
+            QueuedPlaceOrderService queuedPlaceOrderService = (QueuedPlaceOrderService) placeOrderService;
+            OrderTaskHandleResult orderTaskHandleResult = queuedPlaceOrderService.getPlaceOrderResult(userId, itemId, placeOrderTaskId);
+            if (!orderTaskHandleResult.isSuccess()) {
+                return AppSimpleResult.failed(orderTaskHandleResult.getCode(), orderTaskHandleResult.getMessage(), orderTaskHandleResult);
+            }
+            return AppSimpleResult.ok(orderTaskHandleResult);
+        } else {
+            return AppSimpleResult.failed(ORDER_TYPE_NOT_SUPPORT);
+        }
     }
 
     @Override
     public AppMultiResult<FlashOrderDTO> getOrdersByUser(Long userId, FlashOrdersQuery flashOrdersQuery) {
-        return null;
+        PageResult<FlashOrder> flashOrderPageResult = flashOrderDomainService.getOrdersByUser(
+                userId, FlashOrderAppMapping.INSTANCE.toFlashOrdersQuery(flashOrdersQuery));
+
+        List<FlashOrderDTO> flashOrderDTOList = flashOrderPageResult.getData().stream()
+                .map(FlashOrderAppMapping.INSTANCE::toFlashOrderDTO)
+                .collect(Collectors.toList());
+        return AppMultiResult.of(flashOrderDTOList, flashOrderPageResult.getTotal());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public AppResult cancelOrder(Long userId, Long orderId) {
-        return null;
+        log.info("cancelOrder|取消订单|{},{}", userId, orderId);
+        if (userId == null || orderId == null) {
+            throw new BizException(INVALID_PARAMS);
+        }
+        FlashOrder flashOrder = flashOrderDomainService.getOrder(userId, orderId);
+        if (flashOrder == null) {
+            throw new BizException(ORDER_NOT_FOUND);
+        }
+        boolean cancelSuccess = flashOrderDomainService.cancelOrder(userId, orderId);
+        if (!cancelSuccess) {
+            log.info("cancelOrder|订单取消失败|{}", orderId);
+            return AppResult.buildFailure(ORDER_CANCEL_FAILED);
+        }
+        StockDeduction stockDeduction = new StockDeduction()
+                .setItemId(flashOrder.getItemId())
+                .setQuantity(flashOrder.getQuantity());
+
+        boolean stockRecoverSuccess = stockDeductionDomainService.increaseItemStock(stockDeduction);
+        if (!stockRecoverSuccess) {
+            log.info("cancelOrder|库存恢复失败|{}", orderId);
+            throw new BizException(ORDER_CANCEL_FAILED);
+        }
+        boolean stockInRedisRecoverSuccess = itemStockCacheService.increaseItemStock(stockDeduction);
+        if (!stockInRedisRecoverSuccess) {
+            log.info("cancelOrder|Redis库存恢复失败|{}", orderId);
+            throw new BizException(ORDER_CANCEL_FAILED);
+        }
+        log.info("cancelOrder|订单取消成功|{}", orderId);
+        return AppResult.buildSuccess();
     }
 
     private String getPlaceOrderLockKey(Long userId) {
