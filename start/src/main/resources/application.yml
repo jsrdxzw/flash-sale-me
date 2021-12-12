@@ -22,7 +22,7 @@ mybatis:
   mapper-locations: classpath:mappers/*xml
 
 # 下单方式：normal=默认限流并发竞争，queued=有序队列方式，buckets=分桶库存
-place_order_type: normal
+place_order_type: queued
 rocketmq:
   name-server: 127.0.0.1:9876
   placeorder:

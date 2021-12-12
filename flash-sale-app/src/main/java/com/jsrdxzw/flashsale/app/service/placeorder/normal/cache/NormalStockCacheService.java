@@ -33,7 +33,7 @@ import static com.jsrdxzw.flashsale.util.StringHelper.link;
  */
 @Slf4j
 @Service
-@Conditional(MultiPlaceOrderTypesCondition.class)
+//@Conditional(MultiPlaceOrderTypesCondition.class)
 public class NormalStockCacheService implements ItemStockCacheService {
     private static final String ITEM_STOCK_ALIGN_LOCK_KEY = "ITEM_STOCK_ALIGN_LOCK_KEY";
     private static final String ITEM_STOCKS_CACHE_KEY = "ITEM_STOCKS_CACHE_KEY";
@@ -48,13 +48,11 @@ public class NormalStockCacheService implements ItemStockCacheService {
             .expireAfterWrite(10, TimeUnit.SECONDS).build();
 
     static {
-        INIT_OR_ALIGN_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[2]) == 1) then" +
-                "    return -997;" +
+        INIT_OR_ALIGN_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[1]) == 1) then" +
+                "    return -1;" +
                 "end;" +
-                "redis.call('set', KEYS[2] , 1);" +
                 "local stockNumber = tonumber(ARGV[1]);" +
                 "redis.call('set', KEYS[1] , stockNumber);" +
-                "redis.call('del', KEYS[2]);" +
                 "return 1";
 
         INCREASE_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[2]) == 1) then" +
@@ -121,8 +119,7 @@ public class NormalStockCacheService implements ItemStockCacheService {
                 return false;
             }
             String key1ItemStocksCacheKey = getItemStocksCacheKey(itemId);
-            String key2ItemStocksAlignKey = getItemStocksCacheAlignKey(itemId);
-            List<String> keys = Lists.newArrayList(key1ItemStocksCacheKey, key2ItemStocksAlignKey);
+            List<String> keys = Lists.newArrayList(key1ItemStocksCacheKey);
 
             DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(INIT_OR_ALIGN_ITEM_STOCK_LUA, Long.class);
 
@@ -131,7 +128,7 @@ public class NormalStockCacheService implements ItemStockCacheService {
                 log.info("alignItemStocks|秒杀品库存校准失败|{},{},{}", itemId, key1ItemStocksCacheKey, flashItem.getInitialStock());
                 return false;
             }
-            if (result == -997) {
+            if (result == -1) {
                 log.info("alignItemStocks|已在校准中，本次校准取消|{},{},{},{}", result, itemId, key1ItemStocksCacheKey, flashItem.getInitialStock());
                 return true;
             }

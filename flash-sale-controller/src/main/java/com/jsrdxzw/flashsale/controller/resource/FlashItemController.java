@@ -9,6 +9,7 @@ import com.jsrdxzw.flashsale.app.model.query.FlashItemsQuery;
 import com.jsrdxzw.flashsale.app.model.result.AppMultiResult;
 import com.jsrdxzw.flashsale.app.model.result.AppResult;
 import com.jsrdxzw.flashsale.app.model.result.AppSimpleResult;
+import com.jsrdxzw.flashsale.app.schedule.FlashItemWarmUpScheduler;
 import com.jsrdxzw.flashsale.app.service.item.FlashItemAppService;
 import com.jsrdxzw.flashsale.controller.model.converter.FlashItemControllerMapping;
 import com.jsrdxzw.flashsale.controller.model.request.FlashItemPublishRequest;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 public class FlashItemController {
     @Autowired
     private FlashItemAppService flashItemAppService;
+    @Autowired
+    private FlashItemWarmUpScheduler flashItemWarmUpScheduler;
 
     @PostMapping(value = "/activities/{activityId}/flash-items")
     public Response publishFlashItem(@RequestAttribute Long userId,
@@ -87,5 +90,16 @@ public class FlashItemController {
     public Response offlineFlashItem(@RequestAttribute Long userId, @PathVariable Long activityId, @PathVariable Long itemId) {
         AppResult onlineResult = flashItemAppService.onlineFlashItem(userId, activityId, itemId);
         return FlashItemControllerMapping.INSTANCE.with(onlineResult);
+    }
+
+    /**
+     * 手动预热库存
+     *
+     * @return
+     */
+    @PostMapping("/activities/flash-items/warmUp")
+    public Response warmUp() {
+        flashItemWarmUpScheduler.warmUpFlashItemTask();
+        return Response.buildSuccess();
     }
 }

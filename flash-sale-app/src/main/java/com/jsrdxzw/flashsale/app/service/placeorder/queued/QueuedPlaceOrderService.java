@@ -106,7 +106,7 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
         log.info("placeOrder|任务提交结果|{},{},{}", userId, placeOrderTaskId, JSONUtil.toJSONString(placeOrderTask));
 
         if (!submitResult.isSuccess()) {
-            log.info("placeOrder|下单任务提交失败|{},{}", userId, placeOrderCommand.getActivityId());
+            log.info("placeOrder|下单任务提交失败|{},{},{}", userId, placeOrderCommand.getActivityId(), submitResult.getMessage());
             return PlaceOrderResult.failed(submitResult.getCode(), submitResult.getMessage());
         }
         log.info("placeOrder|下单任务提交完成|{},{}", userId, placeOrderTaskId);

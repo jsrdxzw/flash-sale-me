@@ -15,7 +15,7 @@ scrape_configs:
   scrape_interval: 5s
   metrics_path: 'api/actuator/prometheus'
   static_configs:
-  - targets: ["192.168.50.237:8090"]
+  - targets: ["192.168.0.106:8090"]
 
 - job_name: 'redis-exporter'
   scrape_interval: 5s
