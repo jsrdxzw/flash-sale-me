@@ -3,20 +3,23 @@ package com.jsrdxzw.flashsale.controller.rules;
 import com.jsrdxzw.flashsale.app.auth.AuthorizationService;
 import com.jsrdxzw.flashsale.app.auth.model.AuthResult;
 import com.jsrdxzw.flashsale.controller.rules.config.SecurityRulesConfiguration;
+import com.jsrdxzw.flashsale.security.SlidingWindowLimitService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 public abstract class SecurityRuleChainServiceBase {
 
-    @Autowired
+    @Resource
     protected AuthorizationService authorizationService;
-    @Autowired
+    @Resource
     protected SecurityRulesConfiguration securityRulesConfiguration;
+    @Resource
+    protected SlidingWindowLimitService slidingWindowLimitService;
 
     @PostConstruct
     public void init() {
