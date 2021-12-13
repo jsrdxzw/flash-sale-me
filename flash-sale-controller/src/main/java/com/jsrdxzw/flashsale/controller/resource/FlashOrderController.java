@@ -12,8 +12,9 @@ import com.jsrdxzw.flashsale.app.service.order.FlashOrderAppService;
 import com.jsrdxzw.flashsale.controller.model.converter.FlashOrderControllerMapping;
 import com.jsrdxzw.flashsale.controller.model.request.FlashPlaceOrderRequest;
 import com.jsrdxzw.flashsale.controller.model.response.FlashOrderResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * @author xuzhiwei
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 public class FlashOrderController {
-    @Autowired
+    @Resource
     private FlashOrderAppService flashOrderAppService;
 
     @PostMapping(value = "/flash-orders")

@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 /**
+ * --add-opens java.base/java.lang=ALL-UNNAMED
  * @author xuzhiwei
  * @date 2021/12/1 3:53 下午
  */

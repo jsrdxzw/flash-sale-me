@@ -21,10 +21,10 @@ import com.jsrdxzw.flashsale.lock.DistributedLock;
 import com.jsrdxzw.flashsale.lock.DistributedLockFactoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,22 +41,22 @@ import static com.jsrdxzw.flashsale.util.StringHelper.link;
 public class DefaultFlashOrderAppService implements FlashOrderAppService {
     private static final String PLACE_ORDER_LOCK_KEY = "PLACE_ORDER_LOCK_KEY";
 
-    @Autowired
+    @Resource
     private FlashOrderDomainService flashOrderDomainService;
 
-    @Autowired
+    @Resource
     private DistributedLockFactoryService lockFactoryService;
 
-    @Autowired
+    @Resource
     private PlaceOrderService placeOrderService;
 
-    @Autowired
+    @Resource
     private SecurityService securityService;
 
-    @Autowired
+    @Resource
     private StockDeductionDomainService stockDeductionDomainService;
 
-    @Autowired
+    @Resource
     private ItemStockCacheService itemStockCacheService;
 
     @Override

@@ -19,11 +19,11 @@ import com.jsrdxzw.flashsale.domain.service.FlashOrderDomainService;
 import com.jsrdxzw.flashsale.domain.service.StockDeductionDomainService;
 import com.jsrdxzw.flashsale.domain.util.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 import static com.jsrdxzw.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.jsrdxzw.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILED;
@@ -37,25 +37,25 @@ import static com.jsrdxzw.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILE
 @Conditional(MultiPlaceOrderTypesCondition.class)
 public class NormalPlaceOrderService implements PlaceOrderService {
 
-    @Autowired
+    @Resource
     private FlashActivityDomainService flashActivityDomainService;
 
-    @Autowired
+    @Resource
     private FlashItemAppService flashItemAppService;
 
-    @Autowired
+    @Resource
     private FlashItemDomainService flashItemDomainService;
 
-    @Autowired
+    @Resource
     private OrderNoGenerateService orderNoGenerateService;
 
-    @Autowired
+    @Resource
     private ItemStockCacheService itemStockCacheService;
 
-    @Autowired
+    @Resource
     private StockDeductionDomainService stockDeductionDomainService;
 
-    @Autowired
+    @Resource
     private FlashOrderDomainService flashOrderDomainService;
 
     @PostConstruct

@@ -15,7 +15,7 @@ import static com.jsrdxzw.flashsale.domain.exception.DomainErrorCode.PARAMS_INVA
  * @date 2021/12/5 8:13 PM
  */
 @Service
-//@ConditionalOnProperty(name = "place_order_type", havingValue = "normal", matchIfMissing = true)
+@ConditionalOnProperty(name = "place_order_type", havingValue = "normal", matchIfMissing = true)
 public class NormalStockDeductionDomainService implements StockDeductionDomainService {
     @Autowired
     private FlashItemRepository flashItemRepository;

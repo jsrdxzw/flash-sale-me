@@ -27,6 +27,7 @@
         <redisson.version>3.16.3</redisson.version>
         <protostuff.version>1.7.4</protostuff.version>
         <rocketmq.version>2.2.1</rocketmq.version>
+        <sharding.version>4.1.1</sharding.version>
     </properties>
 
     <dependencyManagement>
@@ -118,11 +119,16 @@
                 <artifactId>protostuff-core</artifactId>
                 <version>${protostuff.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
                 <artifactId>rocketmq-spring-boot-starter</artifactId>
                 <version>${rocketmq.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+                <version>${sharding.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

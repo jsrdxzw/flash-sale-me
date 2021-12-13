@@ -6,7 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.jsrdxzw.flashsale.app.service.stock.ItemStockCacheService;
 import com.jsrdxzw.flashsale.app.service.stock.model.ItemStockCache;
-import com.jsrdxzw.flashsale.app.util.MultiPlaceOrderTypesCondition;
 import com.jsrdxzw.flashsale.cache.DistributedCacheService;
 import com.jsrdxzw.flashsale.cache.redis.RedisCacheService;
 import com.jsrdxzw.flashsale.domain.model.StockDeduction;
@@ -16,7 +15,7 @@ import com.jsrdxzw.flashsale.lock.DistributedLock;
 import com.jsrdxzw.flashsale.lock.DistributedLockFactoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +32,7 @@ import static com.jsrdxzw.flashsale.util.StringHelper.link;
  */
 @Slf4j
 @Service
-//@Conditional(MultiPlaceOrderTypesCondition.class)
+@ConditionalOnProperty(value = "place_order_type", havingValue = "normal", matchIfMissing = true)
 public class NormalStockCacheService implements ItemStockCacheService {
     private static final String ITEM_STOCK_ALIGN_LOCK_KEY = "ITEM_STOCK_ALIGN_LOCK_KEY";
     private static final String ITEM_STOCKS_CACHE_KEY = "ITEM_STOCKS_CACHE_KEY";
