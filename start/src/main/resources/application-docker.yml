@@ -1,0 +1,126 @@
+logging:
+  config: classpath:logback-spring.xml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    db:
+      enabled: false
+  metrics:
+    export:
+      datadog:
+        enabled: false
+      jmx:
+        enabled: true
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+  security:
+    enabled: false
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mappers/*xml
+
+# 下单方式：normal=默认限流并发竞争，queued=有序队列方式，buckets=分桶库存
+place_order_type: buckets
+rocketmq:
+  name-server: 127.0.0.1:9876
+  placeorder:
+    topic: PLACE_ORDER_TASK_TOPIC
+    producer:
+      group: PLACE_ORDER_TASK_TOPIC_PRODUCER_GROUP
+
+server:
+  port: 8090
+  tomcat:
+    threads:
+      max: 500
+  servlet:
+    context-path: /api
+spring:
+  main:
+    allow-circular-references: true
+  application:
+    name: flash-sale
+  redis:
+    address: redis://127.0.0.1:6379
+    host: 127.0.0.1
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        max-wait: -1
+        min-idle: 0
+    port: 6379
+    timeout: 30000
+  #  datasource:
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    url: jdbc:mysql://127.0.0.1:3306/flash_sale?serverTimezone=UTC&useUnicode=true
+  #    username: thoughts-beta
+  #    password: thoughts-beta
+  #    type: com.zaxxer.hikari.HikariDataSource
+  cloud:
+    sentinel:
+      transport:
+        dashboard: 127.0.0.1:8858
+      # 取消Sentinel控制台懒加载
+      # 默认情况下 Sentinel 会在客户端首次调用的时候进行初始化，开始向控制台发送心跳包
+      # 配置 sentinel.eager=true 时，取消Sentinel控制台懒加载功能
+      eager: true
+      # 分库分表相关配置
+  shardingsphere:
+    sharding:
+      default-data-source-name: ds
+      tables:
+        flash_bucket:
+          database-strategy:
+            inline:
+              sharding-column: item_id
+              algorithm-expression: ds$->{item_id % 2}
+          actualDataNodes: ds${0..1}.flash_bucket_${0..2}
+          tableStrategy:
+            inline:
+              shardingColumn: item_id
+              algorithm-expression: flash_bucket_${item_id % 3}
+          key-generator:
+            column: id
+            type: SNOWFLAKE
+        flash_order:
+          database-strategy:
+            inline:
+              sharding-column: item_id
+              algorithm-expression: ds$->{item_id % 2}
+          actual-data-nodes: ds${0..1}.flash_order_${0..2}
+          tableStrategy:
+            inline:
+              shardingColumn: item_id
+              algorithm-expression: flash_order_${item_id % 3}
+    datasource:
+      names: ds,ds0,ds1
+      ds:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://127.0.0.1:3306/flash_sale?serverTimezone=UTC&useUnicode=true
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/flash_sale?serverTimezone=UTC&useUnicode=true
+        username: thoughts-beta
+        password: thoughts-beta
+      ds0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://127.0.0.1:3306/flash_sale_0?serverTimezone=UTC&useUnicode=true
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/flash_sale_0?serverTimezone=UTC&useUnicode=true
+        username: thoughts-beta
+        password: thoughts-beta
+      ds1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://127.0.0.1:3306/flash_sale_1?serverTimezone=UTC&useUnicode=true
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/flash_sale_1?serverTimezone=UTC&useUnicode=true
+        username: thoughts-beta
+        password: thoughts-beta
+    props:
+      sql:
+        show: false

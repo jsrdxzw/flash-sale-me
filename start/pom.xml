@@ -83,4 +83,34 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.jsrdxzw.flashsale.FlashSaleApplication</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
